@@ -1,0 +1,19 @@
+# Next.js build
+.next/
+
+# Node.js
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Otros
+.DS_Store
+
+.env
+.env.backup
+env.txt
+.env
+.env

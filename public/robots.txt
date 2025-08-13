@@ -1,0 +1,66 @@
+# Robots.txt for Salta Conecta
+# https://saltaconecta.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# Allow crawling of main pages
+Allow: /products
+Allow: /categories
+Allow: /suppliers
+Allow: /auth/login
+Allow: /auth/register
+
+# Disallow private/sensitive areas
+Disallow: /admin
+Disallow: /api/
+Disallow: /account
+Disallow: /profile
+Disallow: /orders
+Disallow: /checkout
+Disallow: /support
+Disallow: /settings
+Disallow: /supplier
+Disallow: /_next/
+Disallow: /private/
+
+# Allow specific API endpoints for SEO
+Allow: /api/products/sitemap
+Allow: /api/categories/sitemap
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://saltaconecta.com/sitemap.xml
+Sitemap: https://saltaconecta.com/sitemap-products.xml
+Sitemap: https://saltaconecta.com/sitemap-categories.xml
+
+# Special rules for different bots
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+User-agent: facebookexternalhit
+Allow: /
+Allow: /products/
+Allow: /categories/
+
+User-agent: Twitterbot
+Allow: /
+Allow: /products/
+Allow: /categories/
+
+# Block aggressive crawlers
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
