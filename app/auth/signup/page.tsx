@@ -29,6 +29,7 @@ export default function SignUpPage() {
       email: '',
       password: '',
       confirmPassword: '',
+      acceptTerms: false,
     },
   })
 
@@ -44,6 +45,7 @@ export default function SignUpPage() {
           name: values.name,
           email: values.email,
           password: values.password,
+          acceptTerms: true,
         }),
       })
 
@@ -213,6 +215,26 @@ export default function SignUpPage() {
                 )}
               />
 
+              {/* Terms acceptance */}
+              <div className="text-xs text-gray-600">
+                Al registrarte, confirmas que aceptas nuestros
+                {' '}<Link className="text-primary hover:underline" href="/legal/terms" target="_blank">Términos y Condiciones</Link>
+                {' '}y nuestra{' '}
+                <Link className="text-primary hover:underline" href="/legal/privacy" target="_blank">Política de Privacidad</Link>.
+              </div>
+              <FormField
+                control={form.control}
+                name="acceptTerms"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <input id="acceptTerms" type="checkbox" checked={field.value || false} onChange={e => field.onChange(e.target.checked)} />
+                    </FormControl>
+                    <FormLabel htmlFor="acceptTerms" className="text-sm">Acepto términos y privacidad</FormLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button
                 type="submit"
                 className="w-full"

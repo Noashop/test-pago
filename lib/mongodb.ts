@@ -6,26 +6,43 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
 }
 
-let cached: any = null
+// Use global cache to prevent multiple connections in serverless / hot-reload
+interface MongooseGlobal {
+  conn: typeof mongoose | null
+  promise: Promise<typeof mongoose> | null
+}
+
+const globalWithMongoose = globalThis as unknown as { _mongoose?: MongooseGlobal }
+
+if (!globalWithMongoose._mongoose) {
+  globalWithMongoose._mongoose = { conn: null, promise: null }
+}
 
 async function dbConnect() {
-  if (cached) {
-    return cached
+  const cached = globalWithMongoose._mongoose!
+
+  if (cached.conn) {
+    return cached.conn
   }
 
-  const opts = {
-    // Habilitamos bufferCommands para evitar errores "before initial connection is complete"
-    // cuando múltiples requests concurrentes llegan al iniciar el server.
-    bufferCommands: true,
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: true,
+    } as any
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+      return mongooseInstance
+    })
   }
 
   try {
-    cached = await mongoose.connect(MONGODB_URI, opts)
-    return cached
+    cached.conn = await cached.promise
   } catch (e) {
-    cached = null
+    cached.promise = null
     throw e
   }
+
+  return cached.conn
 }
 
 // Export both for compatibility

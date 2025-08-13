@@ -72,7 +72,10 @@ export async function GET(
       paymentMethod: orderData.paymentMethod,
       shippingMethod: orderData.shippingMethod || 'Envío estándar',
       shippingAddress: orderData.shippingAddress,
-      trackingNumber: orderData.trackingNumber,
+      trackingNumber: orderData.tracking?.trackingNumber,
+      // Opcional: exponer carrier y url si el front lo necesitara en el futuro
+      carrier: orderData.tracking?.carrier,
+      trackingUrl: orderData.tracking?.url,
       adminNotes: orderData.adminNotes,
       createdAt: orderData.createdAt,
       updatedAt: orderData.updatedAt
@@ -245,7 +248,15 @@ export async function PATCH(
             { status: 400 }
           )
         }
-        updateData.trackingNumber = trackingNumber
+        // Persistir tracking dentro del objeto tracking del pedido
+        updateData.tracking = {
+          ...(order.tracking || {}),
+          trackingNumber,
+          // Mantener carrier/url existentes si no se proporcionan en este flujo
+          carrier: (order.tracking as any)?.carrier || '',
+          url: (order.tracking as any)?.url || ''
+        }
+        // Al actualizar tracking, marcamos como enviado
         updateData.status = 'shipped'
         message = 'Información de envío actualizada'
         break
@@ -274,7 +285,7 @@ export async function PATCH(
         id: updatedOrder._id,
         orderNumber: updatedOrder.orderNumber,
         status: updatedOrder.status,
-        trackingNumber: updatedOrder.trackingNumber
+        trackingNumber: (updatedOrder as any)?.tracking?.trackingNumber
       }
     })
 

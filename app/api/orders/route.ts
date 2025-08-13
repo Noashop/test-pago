@@ -4,19 +4,22 @@ import Order from '@/models/Order'
 import Product from '@/models/Product'
 import { requireAuth } from '@/lib/auth-middleware'
 import { jsonOk, jsonError } from '@/lib/api-response'
-import { USER_ROLES } from '@/constants'
+import { USER_ROLES, PAGINATION } from '@/constants'
+import { withRateLimit } from '@/lib/rate-limit'
+import { z } from 'zod'
 import mongoose from 'mongoose'
 
 // GET /api/orders - Get user's orders
-export async function GET(request: NextRequest) {
+export const GET = withRateLimit(async (request: NextRequest) => {
   try {
     // Permitir tanto admin como cliente autenticado
     const { user } = await requireAuth(request)
     await connectToDatabase()
 
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const page = Math.max(1, parseInt(searchParams.get('page') || String(PAGINATION.DEFAULT_PAGE)))
+    const limitParam = parseInt(searchParams.get('limit') || String(PAGINATION.DEFAULT_LIMIT))
+    const limit = Math.min(Math.max(1, limitParam), PAGINATION.MAX_LIMIT)
     const status = searchParams.get('status')
     const paymentStatus = searchParams.get('paymentStatus')
     const sortBy = searchParams.get('sortBy') || 'createdAt'
@@ -80,23 +83,51 @@ export async function GET(request: NextRequest) {
     console.error('Get orders error:', error)
     return jsonError('Error interno del servidor', 500)
   }
-}
+})
 
-export async function POST(request: NextRequest) {
+// Validation schemas
+const orderItemSchema = z.object({
+  product: z.string().optional(),
+  productId: z.string().optional(),
+  price: z.number().nonnegative(),
+  quantity: z.number().int().positive(),
+})
+
+const shippingAddressSchema = z.object({
+  name: z.string().min(1),
+  street: z.string().min(1).optional(),
+  city: z.string().min(1).optional(),
+  state: z.string().min(1).optional(),
+  zipCode: z.string().min(1).optional(),
+  country: z.string().min(1).optional(),
+  phone: z.string().optional(),
+})
+
+const createOrderSchema = z.object({
+  items: z.array(orderItemSchema).min(1),
+  shippingAddress: shippingAddressSchema,
+  paymentMethod: z.string().optional(),
+  notes: z.string().optional(),
+  discount: z.number().nonnegative().optional(),
+  tax: z.number().nonnegative().optional(),
+  shipping: z.number().nonnegative().optional(),
+  shippingMethod: z.string().optional(),
+  pickupDate: z.string().optional(),
+})
+
+export const POST = withRateLimit(async (request: NextRequest) => {
   try {
     const { user } = await requireAuth(request)
     await connectToDatabase()
 
     const body = await request.json()
-    const { items, shippingAddress, paymentMethod, notes, discount = 0, tax = 0, shipping = 0 } = body
+    const parsed = createOrderSchema.safeParse(body)
+    if (!parsed.success) {
+      const fields = parsed.error.errors.map((e) => e.path.join('.')).join(', ')
+      return jsonError('Datos inválidos: ' + fields, 400)
+    }
 
-    // Validaciones básicas
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return jsonError('Items del pedido son requeridos', 400)
-    }
-    if (!shippingAddress) {
-      return jsonError('Dirección de envío es requerida', 400)
-    }
+    const { items, shippingAddress, paymentMethod, notes, discount = 0, tax = 0, shipping = 0, shippingMethod, pickupDate } = parsed.data
 
     // Obtener productos para completar info requerida por el modelo (name, image, supplier)
     const productIds = items.map((it: any) => it.product || it.productId)
@@ -142,8 +173,8 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       paymentStatus: 'pending',
       paymentMethod: paymentMethod || 'mercadopago',
-      shippingMethod: body.shippingMethod || 'home_delivery',
-      pickupDate: body.pickupDate ? new Date(body.pickupDate) : undefined,
+      shippingMethod: shippingMethod || 'home_delivery',
+      pickupDate: pickupDate ? new Date(pickupDate) : undefined,
       shippingAddress,
       notes: notes || '',
       createdAt: new Date(),
@@ -163,4 +194,4 @@ export async function POST(request: NextRequest) {
     console.error('Create order error:', error)
     return jsonError('Error interno del servidor', 500)
   }
-}
+})

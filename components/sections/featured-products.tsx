@@ -174,14 +174,15 @@ export default function FeaturedProducts() {
                   >
                     <ShoppingCart className="h-4 w-4" />
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="bg-white hover:bg-gray-100"
-                    onClick={() => { setQuickProductId(product._id); setQuickOpen(true) }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                  <Link href={`/products/${product._id}`}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-white hover:bg-gray-100"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardHeader>

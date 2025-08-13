@@ -3,6 +3,7 @@ import { connectToDatabase } from '@/lib/mongodb'
 import { requireRole } from '@/lib/auth-middleware'
 import { USER_ROLES } from '@/constants'
 import { v2 as cloudinary } from 'cloudinary'
+import { rateLimiters } from '@/lib/rate-limit'
 
 // Configure Cloudinary
 const cloudinaryConfig = {
@@ -20,6 +21,10 @@ cloudinary.config(cloudinaryConfig)
 
 // POST /api/upload - Upload file to Cloudinary
 export async function POST(request: NextRequest) {
+  const rateLimited = rateLimiters.upload.middleware(request)
+  if (rateLimited) {
+    return rateLimited
+  }
   try {
     const { user } = await requireRole(request, [USER_ROLES.ADMIN, USER_ROLES.SUPPLIER])
     await connectToDatabase()
@@ -111,6 +116,10 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/upload - Delete file from Cloudinary
 export async function DELETE(request: NextRequest) {
+  const rateLimited = rateLimiters.upload.middleware(request)
+  if (rateLimited) {
+    return rateLimited
+  }
   try {
     const { user } = await requireRole(request, [USER_ROLES.ADMIN, USER_ROLES.SUPPLIER])
     await connectToDatabase()

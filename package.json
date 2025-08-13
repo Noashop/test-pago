@@ -9,20 +9,7 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "type-check": "tsc --noEmit",
-    "setup:cloudinary": "node scripts/setup-cloudinary.js",
-    "check:cloudinary": "node scripts/check-cloudinary.js",
-    "create:cloudinary-preset": "node scripts/create-cloudinary-preset.js",
-    "verify:cloudinary": "node scripts/verify-cloudinary-credentials.js",
-    "setup:categories": "node scripts/setup-categories-api.js",
-    "check:categories": "node scripts/check-categories.js",
-    "test:product": "node scripts/test-product-creation.js",
-    "export:databases": "node scripts/export-databases.js",
-    "migrate:noashop": "node scripts/migrate-noashop-data.js",
-    "delete:noashop": "node scripts/migrate-noashop-data.js --delete-noashop",
-    "migrate:clean": "node scripts/migrate-noashop-clean.js",
-    "verify:migration": "node scripts/verify-migration.js",
-    "test:products": "node scripts/test-product-creation-new.js"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",

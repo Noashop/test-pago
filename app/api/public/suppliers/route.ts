@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import User from '@/models/User'
 import { USER_ROLES } from '@/constants'
+import { rateLimiters } from '@/lib/rate-limit'
 
 // GET /api/public/suppliers - Public listing of approved suppliers with logos
 export async function GET(_request: NextRequest) {
+  const limited = rateLimiters.search.middleware(_request)
+  if (limited) return limited
   try {
     await connectToDatabase()
 

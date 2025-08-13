@@ -299,10 +299,108 @@ export default function RegisterPage() {
                 />
 
                 <div className="space-y-4">
+                  {/* Business required minimal fields for this project: address, phone, opening hours */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                  control={supplierForm.control}
+                  name="businessInfo.address.street"
+                  render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Dirección comercial</FormLabel>
+                  <FormControl>
+                  <Input placeholder="Calle y número" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+                  )}
+                  />
+                  <FormField
+                  control={supplierForm.control}
+                  name="businessInfo.phone"
+                  render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Teléfono comercial</FormLabel>
+                  <FormControl>
+                  <Input placeholder="Ej: +54 387 555-5555" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+                  )}
+                  />
+                  <FormField
+                  control={supplierForm.control}
+                  name="businessInfo.address.city"
+                  render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Ciudad</FormLabel>
+                  <FormControl>
+                  <Input placeholder="Ciudad" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+                  )}
+                  />
+                  <FormField
+                  control={supplierForm.control}
+                  name="businessInfo.address.state"
+                  render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Provincia</FormLabel>
+                  <FormControl>
+                  <Input placeholder="Provincia" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+                  )}
+                  />
+                  <FormField
+                  control={supplierForm.control}
+                  name="businessInfo.address.zipCode"
+                  render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Código Postal</FormLabel>
+                  <FormControl>
+                  <Input placeholder="CP" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+                  )}
+                  />
+                  <FormField
+                  control={supplierForm.control}
+                  name="businessInfo.address.country"
+                  render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>País</FormLabel>
+                  <FormControl>
+                  <Input placeholder="Argentina" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+                  )}
+                  />
+                  </div>
+                  
+                  <div className="space-y-1">
+                  <FormLabel>Horarios de atención (texto libre)</FormLabel>
+                  <FormField
+                  control={supplierForm.control}
+                  name="businessInfo.openingHours"
+                  render={({ field }) => (
+                  <FormItem>
+                  <FormControl>
+                  <Textarea placeholder="Lun a Vie 9-18 hs. Sáb 9-13 hs." rows={2} {...field as any} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+                  )}
+                  />
+                  </div>
+                  
                   <div className="mb-6">
-                    <label className="block text-sm font-medium mb-2">Logo de la empresa (opcional)</label>
-                    <label className="block text-sm font-semibold mb-2">Logo de tu negocio</label>
-                    <ImageUpload
+                  <label className="block text-sm font-medium mb-2">Logo de la empresa (opcional)</label>
+                  <label className="block text-sm font-semibold mb-2">Logo de tu negocio</label>
+                  <ImageUpload
                       value={businessLogo ? [businessLogo] : []}
                       onChange={(urls) => setBusinessLogo(urls[0] || '')}
                       maxImages={1}
@@ -621,6 +719,28 @@ export default function RegisterPage() {
                 />
                 <p className="text-xs text-muted-foreground mt-2">Usa una imagen nítida de rostro. PNG o JPG, hasta 2MB.</p>
               </div>
+
+              {/* Terms acceptance */}
+              <div className="text-xs text-gray-600">
+                Al registrarte, confirmas que aceptas nuestros
+                {' '}<Link className="text-primary hover:underline" href="/legal/terms" target="_blank">Términos y Condiciones</Link>
+                {' '}y nuestra{' '}
+                <Link className="text-primary hover:underline" href="/legal/privacy" target="_blank">Política de Privacidad</Link>.
+              </div>
+
+              <FormField
+                control={form.control}
+                name="acceptTerms"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <input id="acceptTerms" type="checkbox" checked={field.value || false} onChange={e => field.onChange(e.target.checked)} />
+                    </FormControl>
+                    <FormLabel htmlFor="acceptTerms" className="text-sm">Acepto términos y privacidad</FormLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <Button
                 type="submit"

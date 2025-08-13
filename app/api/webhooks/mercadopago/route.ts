@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import Order from '@/models/Order'
 import User from '@/models/User'
+import Product from '@/models/Product'
 import { sendPaymentApprovedEmail } from '@/lib/email'
 import { PAYMENT_STATUS, ORDER_STATUS } from '@/constants'
 
@@ -120,6 +121,9 @@ async function processPaymentById(paymentId: string) {
   }
 
   await Order.findByIdAndUpdate(order._id, updateData)
+  if (payment.status === 'approved') {
+    await deductStockIfNeeded(order._id.toString())
+  }
   return { orderId: order._id, orderNumber: order.orderNumber, paymentStatus: payment.status }
 }
 
@@ -172,6 +176,9 @@ async function processMerchantOrderById(merchantOrderId: string) {
   }
 
   await Order.findByIdAndUpdate(order._id, updateData)
+  if (updateData.paymentStatus === PAYMENT_STATUS.APPROVED) {
+    await deductStockIfNeeded(order._id.toString())
+  }
 
   // Best-effort notification: if approved, email customer
   try {
@@ -187,6 +194,35 @@ async function processMerchantOrderById(merchantOrderId: string) {
   }
 
   return { orderId: order._id, orderNumber: order.orderNumber, merchantOrderId }
+}
+
+// Idempotent stock deduction for approved orders
+async function deductStockIfNeeded(orderId: string) {
+  try {
+    const freshOrder = await Order.findById(orderId).lean()
+    if (!freshOrder) return
+    if ((freshOrder as any).stockDeducted) return
+
+    const items: any[] = (freshOrder as any).items || []
+    for (const it of items) {
+      if (!it?.product || !it?.quantity) continue
+      // Atomic decrement only if enough stock remains
+      const res = await Product.updateOne(
+        { _id: it.product, stock: { $gte: it.quantity } },
+        { $inc: { stock: -it.quantity, availableQuantity: -it.quantity } }
+      )
+      if (res.modifiedCount === 0) {
+        console.warn('Stock deduction failed or insufficient stock', { productId: it.product?.toString?.(), quantity: it.quantity })
+      }
+    }
+
+    await Order.updateOne(
+      { _id: orderId, stockDeducted: { $ne: true } },
+      { $set: { stockDeducted: true } }
+    )
+  } catch (e) {
+    console.error('Stock deduction error:', e)
+  }
 }
 
 function validateSecret(request: NextRequest) {

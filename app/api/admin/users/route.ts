@@ -1,28 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/mongodb'
 import User from '@/models/User'
+import { requireRoleOrPermission } from '@/lib/auth-middleware'
+import { USER_ROLES, PAGINATION } from '@/constants'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      )
-    }
-
+    const { user } = await requireRoleOrPermission(request, [USER_ROLES.ADMIN], ['users', 'customers'])
     await connectToDatabase()
 
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
     const status = searchParams.get('status')
     const search = searchParams.get('search')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const page = Math.max(1, parseInt(searchParams.get('page') || String(PAGINATION.DEFAULT_PAGE)))
+    const limitParam = parseInt(searchParams.get('limit') || String(PAGINATION.DEFAULT_LIMIT))
+    const limit = Math.min(Math.max(1, limitParam), PAGINATION.MAX_LIMIT)
     const skip = (page - 1) * limit
 
     // Build query
@@ -116,15 +109,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      )
-    }
-
+    const { user: sessionUser } = await requireRoleOrPermission(request, [USER_ROLES.ADMIN], ['users', 'customers'])
     await connectToDatabase()
 
     const body = await request.json()
@@ -229,15 +214,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      )
-    }
-
+    const { user: sessionUser } = await requireRoleOrPermission(request, [USER_ROLES.ADMIN], ['users', 'customers'])
     await connectToDatabase()
 
     const body = await request.json()
@@ -267,7 +244,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Prevent self-deletion
-    if (user._id.toString() === session.user.id) {
+    if (user._id.toString() === sessionUser.id) {
       return NextResponse.json(
         { error: 'No puedes eliminar tu propia cuenta' },
         { status: 403 }

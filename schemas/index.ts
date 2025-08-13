@@ -16,6 +16,8 @@ const baseRegisterSchema = z.object({
   phone: z.string().optional(),
   role: z.enum([USER_ROLES.CLIENT, USER_ROLES.SUPPLIER]).default(USER_ROLES.CLIENT),
   profileImage: z.string().optional(),
+  acceptTerms: z.boolean({ required_error: 'Debes aceptar los términos y condiciones' })
+    .refine(v => v === true, { message: 'Debes aceptar los términos y condiciones' }),
 })
 
 export const registerSchema = baseRegisterSchema.refine((data) => data.password === data.confirmPassword, {

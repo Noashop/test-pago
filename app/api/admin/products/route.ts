@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import Product from '@/models/Product'
-import { USER_ROLES } from '@/constants'
-import { requireRole } from '@/lib/auth-middleware'
+import { USER_ROLES, PAGINATION } from '@/constants'
+import { requireRoleOrPermission } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
   try {
-    const { user } = await requireRole(request, [USER_ROLES.ADMIN])
-    
+    const { user } = await requireRoleOrPermission(request, [USER_ROLES.ADMIN], ['products'])
       await connectToDatabase()
 
       const { searchParams } = new URL(request.url)
       const status = searchParams.get('status')
       const category = searchParams.get('category')
       const supplier = searchParams.get('supplier')
-      const limit = parseInt(searchParams.get('limit') || '50')
-      const page = parseInt(searchParams.get('page') || '1')
+      const limitParam = parseInt(searchParams.get('limit') || '50')
+      const limit = Math.min(Math.max(1, limitParam), PAGINATION.MAX_LIMIT)
+      const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
 
       // Construir query
       const query: any = {}
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
       // Obtener productos con paginación
       const skip = (page - 1) * limit
-      
+
       const products = await Product.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)

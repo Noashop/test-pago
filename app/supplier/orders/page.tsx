@@ -541,7 +541,16 @@ export default function SupplierOrdersPage() {
                       {/* Action Buttons */}
                       {order.status === 'pending' && order.paymentStatus === 'approved' && (
                         <Button
-                          onClick={() => handleConfirmOrder(order._id)}
+                          onClick={() => {
+                            // Si no hay tracking, abrir modal para solicitarlo, y confirmar luego
+                            if (!order.trackingNumber) {
+                              setSelectedOrder(order)
+                              setTrackingNumber('')
+                              setShowTrackingModal(true)
+                            } else {
+                              handleConfirmOrder(order._id)
+                            }
+                          }}
                           disabled={actionLoading === order._id}
                           size="sm"
                         >
@@ -638,13 +647,19 @@ export default function SupplierOrdersPage() {
                   Cancelar
                 </Button>
                 <Button
-                  onClick={handleUpdateTracking}
+                  onClick={async () => {
+                    await handleUpdateTracking()
+                    // Si el pedido estaba pendiente y el pago aprobado, confirmar automáticamente tras carga de tracking
+                    if (selectedOrder && selectedOrder.status === 'pending' && selectedOrder.paymentStatus === 'approved') {
+                      await handleConfirmOrder(selectedOrder._id)
+                    }
+                  }}
                   disabled={!trackingNumber.trim() || actionLoading === selectedOrder._id}
                 >
                   {actionLoading === selectedOrder._id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : null}
-                  Actualizar
+                  Guardar
                 </Button>
               </div>
             </div>

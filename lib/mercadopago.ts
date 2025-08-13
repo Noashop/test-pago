@@ -82,8 +82,8 @@ export async function createPaymentPreference(data: CreatePreferenceData) {
       expiration_date_to: data.expiration_date_to,
     }
 
-    // Generar idempotency key por operación (usar orderId + timestamp)
-    const idempotencyKey = `${data.orderId}-${Date.now()}`
+    // Generar idempotency key estable por operación (usar solo orderId)
+    const idempotencyKey = `${data.orderId}`
     const response = await preference.create({ body: preferenceData, requestOptions: { idempotencyKey } })
     return response
   } catch (error) {

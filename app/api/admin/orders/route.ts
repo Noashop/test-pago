@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import Order from '@/models/Order'
-import { requireRole } from '@/lib/auth-middleware'
-import { USER_ROLES } from '@/constants'
+import { requireRoleOrPermission, requireRole } from '@/lib/auth-middleware'
+import { USER_ROLES, PAGINATION } from '@/constants'
 
 export async function GET(request: NextRequest) {
   try {
-    const { user } = await requireRole(request, [USER_ROLES.ADMIN])
+    const { user } = await requireRoleOrPermission(request, [USER_ROLES.ADMIN], ['orders'])
     await connectToDatabase()
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const paymentStatus = searchParams.get('paymentStatus')
     const search = searchParams.get('search')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const page = parseInt(searchParams.get('page') || '1')
+    const limitParam = parseInt(searchParams.get('limit') || '50')
+    const limit = Math.min(Math.max(1, limitParam), PAGINATION.MAX_LIMIT)
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
 
     // Construir query
     const query: any = {}

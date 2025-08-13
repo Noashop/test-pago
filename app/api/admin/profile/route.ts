@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import User from '@/models/User'
+import Order from '@/models/Order'
+import Payout from '@/models/Payout'
 import { requireAdmin } from '@/lib/auth-middleware'
 import { jsonOk, jsonError } from '@/lib/api-response'
 
@@ -12,6 +14,44 @@ export async function GET(request: NextRequest) {
 
     const dbUser = await User.findById(user.id).select('-password').lean()
     if (!dbUser || Array.isArray(dbUser)) return jsonError('Usuario no encontrado', 404)
+
+    // Cálculo de billetera del admin
+    const deliveredPaidOrders = await Order.find({
+      paymentStatus: { $in: ['approved', 'paid'] },
+      status: { $in: ['delivered'] }
+    }).select('items total commissionDetails').lean()
+
+    function computeAdminCommission(order: any) {
+      // Preferir valor pre-calculado
+      if (typeof order?.commissionDetails?.adminCommission === 'number') {
+        return Math.max(0, order.commissionDetails.adminCommission)
+      }
+      // Fallback: calcular por ítem (precio - costo) * qty, mínimo 0
+      let commission = 0
+      for (const it of (order.items || [])) {
+        const price = Number(it?.price || 0)
+        const qty = Number(it?.quantity || 0)
+        const cost = Number(it?.costPrice || 0)
+        const delta = price - (isNaN(cost) ? 0 : cost)
+        commission += Math.max(0, delta) * qty
+      }
+      // Si no hay costPrice y hay porcentaje, usarlo
+      if (commission === 0 && typeof order?.commissionDetails?.adminCommissionPercentage === 'number') {
+        const pct = order.commissionDetails.adminCommissionPercentage
+        let gross = 0
+        for (const it of (order.items || [])) {
+          gross += Number(it?.price || 0) * Number(it?.quantity || 0)
+        }
+        commission = Math.max(0, gross * (pct / 100))
+      }
+      return Math.max(0, commission)
+    }
+
+    const adminCommissionTotal = deliveredPaidOrders.reduce((acc, o) => acc + computeAdminCommission(o), 0)
+
+    const pendingPayoutsDocs = await Payout.find({ status: 'pending' }).select('amount').lean()
+    const pendingPayoutsTotal = pendingPayoutsDocs.reduce((acc, p: any) => acc + Number(p.amount || 0), 0)
+    const lastPaidPayout = await Payout.findOne({ status: 'paid' }).sort({ paidAt: -1 }).select('paidAt').lean()
 
     const profile = {
       _id: dbUser._id?.toString?.() || '',
@@ -35,11 +75,11 @@ export async function GET(request: NextRequest) {
         marketingEmails: !!dbUser.preferences?.marketing,
         language: dbUser.preferences?.language || 'es'
       },
-      // Datos informativos para la UI (placeholder si aún no hay fuentes)
+      // Datos de billetera calculados dinámicamente
       wallet: {
-        availableBalance: dbUser.wallet?.availableBalance || 0,
-        pendingPayouts: dbUser.wallet?.pendingPayouts || 0,
-        lastPayoutAt: dbUser.wallet?.lastPayoutAt?.toISOString?.() || ''
+        availableBalance: adminCommissionTotal,
+        pendingPayouts: pendingPayoutsTotal,
+        lastPayoutAt: (lastPaidPayout as any)?.paidAt?.toISOString?.() || ''
       },
       billing: {
         invoicesCount: dbUser.billing?.invoicesCount || 0,

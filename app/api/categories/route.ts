@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import Category from '@/models/Category'
+import { withSearchRateLimit } from '@/lib/rate-limit'
 
-export async function GET(request: NextRequest) {
+export const GET = withSearchRateLimit(async (request: NextRequest) => {
   try {
     await connectToDatabase()
-    
+
     const categories = await Category.find({})
       .select('name slug description icon subcategories')
       .sort({ name: 1 })
 
-    // Verificar que las categorías tengan la estructura correcta
     const validatedCategories = categories.map((category: any) => ({
       _id: category._id,
       name: category.name,
@@ -35,4 +35,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

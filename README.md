@@ -455,3 +455,4 @@ npm run migrate:clean         # Migración limpia de datos
 *Última actualización: Enero 2025*  
 *Versión: 1.0.0*  
 *Licencia: Propietaria - Salta Conecta*
+# mayorista-demo-13-08-25

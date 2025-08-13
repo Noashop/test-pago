@@ -18,13 +18,22 @@ export const POST = withAuthRateLimit(async (request: NextRequest) => {
       businessInfo,
       profileImage,
       phone,
-      address
+      address,
+      acceptTerms
     } = await request.json()
 
     // Validate required fields
     if (!name || !email || !password) {
       return NextResponse.json(
         { error: 'Todos los campos son requeridos' },
+        { status: 400 }
+      )
+    }
+
+    // Validate terms acceptance
+    if (acceptTerms !== true) {
+      return NextResponse.json(
+        { error: 'Debes aceptar los términos y condiciones y la política de privacidad' },
         { status: 400 }
       )
     }

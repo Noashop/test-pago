@@ -1,45 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { 
-  ShoppingCart, 
-  Truck, 
-  Shield, 
-  Users, 
-  Star, 
-  ArrowRight,
-  Gift,
-  TrendingUp,
-  Zap
-} from 'lucide-react'
 import DynamicHeroSection from '@/components/sections/dynamic-hero-section'
 import FeaturedProducts from '@/components/sections/featured-products'
 import CategoriesSection from '@/components/sections/categories-section'
 import DynamicWhyChooseUs from '@/components/sections/dynamic-why-choose-us'
 import ProductBanners from '@/components/sections/product-banners'
-import { StoreLoader } from '@/components/ui/loaders'
 import SuppliersCarousel from '@/components/sections/suppliers-carousel'
 
 export default function HomePage() {
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    // Simular tiempo de carga
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 2000)
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (isLoading) {
-    return <StoreLoader />
-  }
-
   return (
     <div className="min-h-screen">
       {/* Dynamic Hero Section */}
