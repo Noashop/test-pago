@@ -217,23 +217,38 @@ const OrderSchema = new Schema<IOrder>({
     },
     street: {
       type: String,
-      required: function (this: any) { return this.shippingMethod !== 'pickup' }
+      required: function (this: any) {
+        const parent: any = typeof (this as any).parent === 'function' ? (this as any).parent() : this
+        return parent.shippingMethod !== 'pickup'
+      }
     },
     city: {
       type: String,
-      required: function (this: any) { return this.shippingMethod !== 'pickup' }
+      required: function (this: any) {
+        const parent: any = typeof (this as any).parent === 'function' ? (this as any).parent() : this
+        return parent.shippingMethod !== 'pickup'
+      }
     },
     state: {
       type: String,
-      required: function (this: any) { return this.shippingMethod !== 'pickup' }
+      required: function (this: any) {
+        const parent: any = typeof (this as any).parent === 'function' ? (this as any).parent() : this
+        return parent.shippingMethod !== 'pickup'
+      }
     },
     zipCode: {
       type: String,
-      required: function (this: any) { return this.shippingMethod !== 'pickup' }
+      required: function (this: any) {
+        const parent: any = typeof (this as any).parent === 'function' ? (this as any).parent() : this
+        return parent.shippingMethod !== 'pickup'
+      }
     },
     country: {
       type: String,
-      required: function (this: any) { return this.shippingMethod !== 'pickup' }
+      required: function (this: any) {
+        const parent: any = typeof (this as any).parent === 'function' ? (this as any).parent() : this
+        return parent.shippingMethod !== 'pickup'
+      }
     },
     phone: String
   },

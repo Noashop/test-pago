@@ -62,6 +62,11 @@ const menuItems = [
     icon: CreditCard,
   },
   {
+    title: 'Destinos de Cobro',
+    href: '/supplier/wallets',
+    icon: CreditCard,
+  },
+  {
     title: 'Analíticas y Reportes',
     href: '/supplier/analytics',
     icon: BarChart3,

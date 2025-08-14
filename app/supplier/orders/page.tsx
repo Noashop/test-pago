@@ -85,9 +85,9 @@ export default function SupplierOrdersPage() {
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('pending')
-  // Default to approved payments to show only paid orders by default
-  const [paymentFilter, setPaymentFilter] = useState('approved')
+  const [statusFilter, setStatusFilter] = useState('all')
+  // Mostrar por defecto todos los pagos, para no ocultar pedidos mientras el webhook sincroniza
+  const [paymentFilter, setPaymentFilter] = useState('all')
   
   // Modal states
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)

@@ -66,12 +66,31 @@ class RateLimiter {
     })
   }
 
+  // Algunas rutas internas deben quedar fuera del rate limiting para evitar 429 innecesarios
+  private shouldBypass(req: NextRequest): boolean {
+    try {
+      const pathname = (req as any).nextUrl?.pathname || new URL(req.url).pathname
+      const bypassPaths = [
+        '/api/auth/_log',      // NextAuth client log endpoint
+        '/api/auth/session',   // NextAuth session polling
+      ]
+      return bypassPaths.some((p) => pathname.startsWith(p))
+    } catch {
+      return false
+    }
+  }
+
   middleware(req: NextRequest) {
     // Limpiar entradas expiradas
     this.cleanup()
 
     // Verificar whitelist
     if (this.isWhitelisted(req)) {
+      return null
+    }
+
+    // Evitar rate-limit en rutas internas de NextAuth u otras permitidas
+    if (this.shouldBypass(req)) {
       return null
     }
 
@@ -126,34 +145,34 @@ export const rateLimitConfigs = {
   // Rate limit general para APIs
   api: {
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // 100 requests por ventana
+    max: 300, // 300 requests por ventana
   },
   
   // Rate limit más estricto para autenticación
   auth: {
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 5, // 5 intentos de login por ventana
+    max: 15, // 15 intentos de login por ventana
     message: 'Too many login attempts, please try again later.',
   },
   
   // Rate limit para uploads
   upload: {
     windowMs: 60 * 60 * 1000, // 1 hora
-    max: 10, // 10 uploads por hora
+    max: 30, // 30 uploads por hora
     message: 'Too many upload attempts, please try again later.',
   },
   
   // Rate limit para búsquedas
   search: {
     windowMs: 1 * 60 * 1000, // 1 minuto
-    max: 30, // 30 búsquedas por minuto
+    max: 60, // 60 búsquedas por minuto
     message: 'Too many search requests, please try again later.',
   },
   
   // Rate limit para comentarios/reviews
   comments: {
     windowMs: 60 * 60 * 1000, // 1 hora
-    max: 5, // 5 comentarios por hora
+    max: 15, // 15 comentarios por hora
     message: 'Too many comments, please try again later.',
   },
 }

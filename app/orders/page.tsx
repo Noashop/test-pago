@@ -149,16 +149,17 @@ export default function OrdersPage() {
     try {
       setLoading(true)
       const response = await fetch('/api/orders', { credentials: 'include', cache: 'no-store' })
-      const data = await response.json()
+      const payload = await response.json().catch(() => ({}))
 
       if (response.ok) {
-        const normalized = (data.orders || []).map((o: any) => ({
+        const list = (payload?.data?.orders ?? payload?.orders ?? []) as any[]
+        const normalized = list.map((o: any) => ({
           ...o,
           paymentStatus: o.paymentStatus === 'approved' ? 'paid' : o.paymentStatus === 'rejected' ? 'failed' : o.paymentStatus
         }))
         setOrders(normalized)
       } else {
-        throw new Error(data.error)
+        throw new Error(payload?.error || 'No se pudieron cargar las órdenes')
       }
     } catch (error) {
       toast({

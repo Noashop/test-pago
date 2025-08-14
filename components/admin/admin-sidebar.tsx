@@ -74,6 +74,11 @@ const menuItems = [
     icon: FileText,
   },
   {
+    title: 'Payouts',
+    href: '/admin/payouts',
+    icon: CreditCard,
+  },
+  {
     title: 'Chat y Soporte',
     href: '/admin/support',
     icon: MessageSquare,

@@ -226,9 +226,15 @@ async function deductStockIfNeeded(orderId: string) {
 }
 
 function validateSecret(request: NextRequest) {
-  const incoming = request.nextUrl.searchParams.get('secret') || ''
   const expected = process.env.NEXT_WEBHOOK_MERCADOPAGO_KEY_SECRET || ''
-  return expected && incoming === expected
+
+  // En entornos no productivos, permitir sin secret para facilitar pruebas locales
+  if (!expected && process.env.NODE_ENV !== 'production') {
+    return true
+  }
+
+  const incoming = request.nextUrl.searchParams.get('secret') || ''
+  return !!expected && incoming === expected
 }
 
 export async function POST(request: NextRequest) {
